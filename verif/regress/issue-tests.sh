@@ -33,6 +33,23 @@ python3 cva6.py --testlist=../tests/testlist_issues.yaml --test compressed-fpreg
 make clean
 make -C verif/sim clean_all
 
+# Check that bit 0 of both TOR boundaries is ignored for an eight-byte PMP
+# grain. Run the DUT alone because the default CV64 Spike configuration does
+# not describe CVA6's PMP granularity.
+env -u SPIKE_TANDEM python3 cva6.py \
+  --testlist=../tests/testlist_issues.yaml \
+  --test pmp-tor-grain-rv64 \
+  --iss_yaml cva6.yaml \
+  --target cv64a6_imafdc_sv39 \
+  --iss=veri-testharness
+
+pmp_tor_status=$?
+if [ "$pmp_tor_status" -ne 0 ]; then
+  echo "Error: PMP TOR grain assembly regression failed"
+  cd ../..
+  return "$pmp_tor_status" 2>/dev/null || exit "$pmp_tor_status"
+fi
+
 
 # Check the complete eight-bit Zcmt JVT index with a directed assembly test.
 python3 cva6.py \
