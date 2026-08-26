@@ -342,11 +342,19 @@ done_processing:
   long long addr;
   long long len;
 
+  constexpr uint64_t dram_base = 0x80000000ULL;
   size_t mem_size = 0xFFFFFF;
   while(get_section(&addr, &len))
   {
-    if (addr == 0x80000000)
-        read_section_void(addr, (void *) MEM , mem_size);
+    if (addr >= static_cast<long long>(dram_base) &&
+        len >= 0 &&
+        static_cast<uint64_t>(addr) - dram_base <= mem_size &&
+        static_cast<uint64_t>(len) <= mem_size -
+                                      (static_cast<uint64_t>(addr) - dram_base))
+        read_section_void(addr,
+                          (void *) ((uint8_t *) MEM +
+                                    static_cast<uint64_t>(addr) - dram_base),
+                          static_cast<uint64_t>(len));
     if (addr == 0x84000000)
         try {
           read_section_void(addr, (void *) MEM_USER , mem_size);
